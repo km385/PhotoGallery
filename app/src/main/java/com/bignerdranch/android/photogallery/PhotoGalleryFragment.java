@@ -24,6 +24,8 @@ public class PhotoGalleryFragment extends Fragment {
 
     private RecyclerView mPhotoRecyclerView;
     private List<GalleryItem> mItems = new ArrayList<>();
+    private int mCurrentPage = 1;
+    private PhotoAdapter mAdapter;
 
     public static Fragment newInstance() {
         return new PhotoGalleryFragment();
@@ -33,7 +35,7 @@ public class PhotoGalleryFragment extends Fragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
-        new FetchItemsTask().execute();
+        new FetchItemsTask().execute(String.valueOf(mCurrentPage));
     }
 
     @Nullable
@@ -43,6 +45,8 @@ public class PhotoGalleryFragment extends Fragment {
 
         mPhotoRecyclerView = v.findViewById(R.id.photo_recycler_view);
         mPhotoRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 3));
+        // TODO remove listener when finished
+        mPhotoRecyclerView.addOnScrollListener(new MyOnScrollListener());
 
         setupAdapter();
 
@@ -52,7 +56,17 @@ public class PhotoGalleryFragment extends Fragment {
 
     private void setupAdapter() {
         if (isAdded()){
-            mPhotoRecyclerView.setAdapter(new PhotoAdapter(mItems));
+            if(mAdapter == null){
+                mAdapter = new PhotoAdapter(mItems);
+                mPhotoRecyclerView.setAdapter(mAdapter);
+                Log.d(TAG, "tworzenie");
+            }else{
+                mAdapter.setGalleryItems(mItems);
+                mAdapter.notifyDataSetChanged();
+                Log.d(TAG, "update ui");
+            }
+
+
         }
     }
 
@@ -95,17 +109,34 @@ public class PhotoGalleryFragment extends Fragment {
         public int getItemCount() {
             return mGalleryItems.size();
         }
+
+        public void setGalleryItems(List<GalleryItem> items){
+            mGalleryItems = items;
+        }
     }
 
-    public class FetchItemsTask extends AsyncTask<Void, Void, List<GalleryItem>> {
+    public class MyOnScrollListener extends RecyclerView.OnScrollListener {
         @Override
-        protected List<GalleryItem> doInBackground(Void... voids) {
-            return new FlickrFetchr().fetchItems();
+        public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+            super.onScrolled(recyclerView, dx, dy);
+            if(!recyclerView.canScrollVertically(1)){
+                Log.d(TAG,"cannot be scrolled down any more");
+                mCurrentPage++;
+                new FetchItemsTask().execute(String.valueOf(mCurrentPage));
+            }
+        }
+    }
+
+    public class FetchItemsTask extends AsyncTask<String, Void, List<GalleryItem>> {
+        @Override
+        protected List<GalleryItem> doInBackground(String... strings) {
+            return new FlickrFetchr().fetchItems(strings[0]);
         }
 
         @Override
         protected void onPostExecute(List<GalleryItem> items) {
-            mItems = items;
+            mItems.addAll(items);
+
             setupAdapter();
         }
     }
