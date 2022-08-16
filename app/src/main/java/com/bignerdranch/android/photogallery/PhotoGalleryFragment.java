@@ -6,6 +6,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -25,6 +26,7 @@ public class PhotoGalleryFragment extends Fragment {
     private RecyclerView mPhotoRecyclerView;
     private List<GalleryItem> mItems = new ArrayList<>();
     private int mCurrentPage = 1;
+    private int mColumnCount = 3;
     private PhotoAdapter mAdapter;
 
     public static Fragment newInstance() {
@@ -44,29 +46,44 @@ public class PhotoGalleryFragment extends Fragment {
         View v = inflater.inflate(R.layout.fragment_photo_gallery, container, false);
 
         mPhotoRecyclerView = v.findViewById(R.id.photo_recycler_view);
-        mPhotoRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 3));
-        // TODO remove listener when finished
-        mPhotoRecyclerView.addOnScrollListener(new MyOnScrollListener());
 
+        mPhotoRecyclerView.addOnScrollListener(new MyOnScrollListener());
+        GridLayoutManager manager = new GridLayoutManager(getActivity(), mColumnCount);
+        ViewTreeObserver observer = mPhotoRecyclerView.getViewTreeObserver();
+        if (observer.isAlive()){
+            observer.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+                @Override
+                public void onGlobalLayout() {
+                    mPhotoRecyclerView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                    mColumnCount = mPhotoRecyclerView.getWidth() / 360;
+                    manager.setSpanCount(mColumnCount);
+                }
+            });
+        }
+        mPhotoRecyclerView.setLayoutManager(manager);
         setupAdapter();
 
         return v;
 
     }
 
+    private void updateUI(){
+        if (isAdded()){
+            mAdapter.setGalleryItems(mItems);
+            mAdapter.notifyDataSetChanged();
+        }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        updateUI();
+    }
+
     private void setupAdapter() {
         if (isAdded()){
-            if(mAdapter == null){
-                mAdapter = new PhotoAdapter(mItems);
-                mPhotoRecyclerView.setAdapter(mAdapter);
-                Log.d(TAG, "tworzenie");
-            }else{
-                mAdapter.setGalleryItems(mItems);
-                mAdapter.notifyDataSetChanged();
-                Log.d(TAG, "update ui");
-            }
-
-
+            mAdapter = new PhotoAdapter(mItems);
+            mPhotoRecyclerView.setAdapter(mAdapter);
         }
     }
 
@@ -137,7 +154,7 @@ public class PhotoGalleryFragment extends Fragment {
         protected void onPostExecute(List<GalleryItem> items) {
             mItems.addAll(items);
 
-            setupAdapter();
+            updateUI();
         }
     }
 }
