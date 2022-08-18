@@ -17,6 +17,7 @@ import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 public class FlickrFetchr {
@@ -71,9 +72,21 @@ public class FlickrFetchr {
             Gson gson = new Gson();
             Gallery gallery = gson.fromJson(jsonString, Gallery.class);
             items = gallery.getGalleryItemList();
+            checkForNull(items);
+
         } catch (IOException ioe){
             Log.e(TAG, "Failed to fetch items", ioe);
         }
         return items;
+    }
+
+    private void checkForNull(List<GalleryItem> items) {
+        Iterator<GalleryItem> i = items.iterator();
+        while(i.hasNext()){
+            GalleryItem s = i.next();
+            if (s.getUrl() == null){
+                i.remove();
+            }
+        }
     }
 }

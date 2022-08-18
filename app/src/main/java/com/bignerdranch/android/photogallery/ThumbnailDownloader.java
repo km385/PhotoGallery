@@ -6,6 +6,7 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Message;
 import android.util.Log;
+import android.util.LruCache;
 
 import androidx.annotation.NonNull;
 
@@ -22,6 +23,7 @@ public class ThumbnailDownloader<T> extends HandlerThread {
     private ConcurrentMap<T,String> mRequestMap = new ConcurrentHashMap<>();
     private Handler mResponseHandler;
     private ThumbnailDownloadListener<T> mThumbnailDownloadListener;
+    private Cache mCache;
 
     public interface ThumbnailDownloadListener<T> {
         void onThumbnailDownloaded(T target, Bitmap thumbnail);
@@ -34,6 +36,7 @@ public class ThumbnailDownloader<T> extends HandlerThread {
     public ThumbnailDownloader(Handler responseHandler) {
         super(TAG);
         mResponseHandler = responseHandler;
+        mCache = new Cache(300);
     }
 
     @Override
@@ -83,10 +86,17 @@ public class ThumbnailDownloader<T> extends HandlerThread {
                 return;
             }
 
-            byte[] bitmapBytes = new FlickrFetchr().getUrlBytes(url);
-            final Bitmap bitmap = BitmapFactory
-                    .decodeByteArray(bitmapBytes, 0, bitmapBytes.length);
-            Log.i(TAG, "Bitmap created");
+            final Bitmap bitmap;
+            if (mCache.get(url) == null){
+                byte[] bitmapBytes = new FlickrFetchr().getUrlBytes(url);
+                 bitmap = BitmapFactory
+                        .decodeByteArray(bitmapBytes, 0, bitmapBytes.length);
+                mCache.put(url, bitmap);
+                Log.i(TAG, "Bitmap created");
+            } else{
+                bitmap = mCache.get(url);
+                Log.i(TAG, "used cache");
+            }
 
             mResponseHandler.post(new Runnable() {
                 @Override
@@ -103,5 +113,21 @@ public class ThumbnailDownloader<T> extends HandlerThread {
         } catch (IOException ioe){
             Log.e(TAG, "Error downloading image", ioe);
         }
+    }
+
+    private class Cache extends LruCache<String,Bitmap>{
+
+        public Cache(int maxSize) {
+            super(maxSize);
+        }
+
+//        @Override
+//        protected int sizeOf(String key, Bitmap value) {
+//            int kbValue = value.getByteCount()/1024;
+//            Log.i(TAG, "sizeOf: " + kbValue);
+//            return kbValue;
+//        }
+
+
     }
 }
