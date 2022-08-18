@@ -1,7 +1,5 @@
 package com.bignerdranch.android.photogallery;
 
-import android.annotation.SuppressLint;
-import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
@@ -13,7 +11,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.widget.ImageView;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -21,7 +18,6 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -184,7 +180,13 @@ public class PhotoGalleryFragment extends Fragment {
     public class FetchItemsTask extends AsyncTask<String, Void, List<GalleryItem>> {
         @Override
         protected List<GalleryItem> doInBackground(String... strings) {
-            return new FlickrFetchr().fetchItems(strings[0]);
+            String query = "robot";
+
+            if (query == null) {
+                return new FlickrFetchr().fetchRecentPhotos(strings[0]);
+            } else {
+                return new FlickrFetchr().searchPhotos(strings[0], query);
+            }
         }
 
         @Override
