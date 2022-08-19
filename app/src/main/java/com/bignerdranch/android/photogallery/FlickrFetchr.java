@@ -73,6 +73,7 @@ public class FlickrFetchr {
 
     public List<GalleryItem> searchPhotos(String page, String query){
         String url = buildUrl(SEARCH_METHOD, page, query);
+        Log.i(TAG, "searchPhotos: " + query);
         return downloadGalleryItems(url);
     }
 
