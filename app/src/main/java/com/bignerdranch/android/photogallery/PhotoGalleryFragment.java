@@ -1,5 +1,7 @@
 package com.bignerdranch.android.photogallery;
 
+import static android.view.View.GONE;
+
 import android.content.Context;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
@@ -24,6 +26,8 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.progressindicator.LinearProgressIndicator;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,6 +41,7 @@ public class PhotoGalleryFragment extends Fragment {
     private int mColumnCount = 3;
     private PhotoAdapter mAdapter;
     private ThumbnailDownloader<PhotoHolder> mThumbnailDownloader;
+    private LinearProgressIndicator mProgressIndicator;
 
     public static Fragment newInstance() {
         return new PhotoGalleryFragment();
@@ -75,6 +80,7 @@ public class PhotoGalleryFragment extends Fragment {
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
+                setLoadingScreen(true);
                 // collapses searchView and hides soft keyboard
                 searchView.onActionViewCollapsed();
 
@@ -96,6 +102,17 @@ public class PhotoGalleryFragment extends Fragment {
             String query = QueryPreferences.getStoredQuery(getActivity());
             searchView.setQuery(query, false);
         });
+    }
+
+    private void setLoadingScreen(boolean set) {
+        if (set){
+            mProgressIndicator.setVisibility(View.VISIBLE);
+            mPhotoRecyclerView.setVisibility(View.INVISIBLE);
+        } else {
+            mProgressIndicator.setVisibility(View.GONE);
+            mPhotoRecyclerView.setVisibility(View.VISIBLE);
+        }
+
     }
 
     @Override
@@ -122,6 +139,9 @@ public class PhotoGalleryFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_photo_gallery, container, false);
+
+        mProgressIndicator = v.findViewById(R.id.progress_bar);
+        mProgressIndicator.setVisibility(GONE);
 
         mPhotoRecyclerView = v.findViewById(R.id.photo_recycler_view);
 
@@ -176,6 +196,7 @@ public class PhotoGalleryFragment extends Fragment {
         if (isAdded()){
             mAdapter = new PhotoAdapter(mItems);
             mPhotoRecyclerView.setAdapter(mAdapter);
+            mProgressIndicator.setVisibility(View.VISIBLE);
         }
     }
 
@@ -263,7 +284,7 @@ public class PhotoGalleryFragment extends Fragment {
             } else {
                 mItems = items;
             }
-
+            setLoadingScreen(false);
             updateUI();
         }
     }
