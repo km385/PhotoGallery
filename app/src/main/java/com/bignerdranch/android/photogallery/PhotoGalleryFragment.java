@@ -3,6 +3,7 @@ package com.bignerdranch.android.photogallery;
 import static android.view.View.GONE;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
@@ -52,9 +53,10 @@ public class PhotoGalleryFragment extends Fragment {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
         setHasOptionsMenu(true);
-        //new FetchItemsTask("robot").execute(String.valueOf(mCurrentPage));
-        // TODO change previous line to this but with mCurrentPage
+
         updateItems(String.valueOf(mCurrentPage));
+
+        PollService.setServiceAlarm(getActivity(), true);
 
         Handler responseHandler = new Handler();
         mThumbnailDownloader = new ThumbnailDownloader<>(responseHandler);
