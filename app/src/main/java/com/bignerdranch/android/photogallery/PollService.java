@@ -2,14 +2,19 @@ package com.bignerdranch.android.photogallery;
 
 import android.app.AlarmManager;
 import android.app.IntentService;
+import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Resources;
 import android.net.ConnectivityManager;
 import android.os.SystemClock;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -76,6 +81,23 @@ public class PollService extends IntentService {
             Log.i(TAG, "onHandleIntent: got an old result " + resultId);
         } else{
             Log.i(TAG, "onHandleIntent: got a new result " + resultId);
+
+            Resources resources = getResources();
+            Intent i = PhotoGalleryActivity.newIntent(this);
+            PendingIntent pi = PendingIntent.getActivity(this, 0,i,0);
+
+            Notification notification = new Notification.Builder(this)
+                    .setTicker(resources.getString(R.string.new_pictures_title))
+                    .setSmallIcon(android.R.drawable.ic_menu_report_image)
+                    .setContentTitle(resources.getString(R.string.new_pictures_title))
+                    .setContentText(resources.getString(R.string.new_pictures_text))
+                    .setContentIntent(pi)
+                    .setAutoCancel(true)
+                    .build();
+
+            NotificationManagerCompat notificationManagerCompat =
+                    NotificationManagerCompat.from(this);
+            notificationManagerCompat.notify(0, notification);
         }
 
         QueryPreferences.setLastResultId(this, resultId);
