@@ -2,13 +2,16 @@ package com.bignerdranch.android.photogallery;
 
 import android.app.AlarmManager;
 import android.app.IntentService;
+
 import android.app.Notification;
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.net.ConnectivityManager;
+import android.os.Build;
 import android.os.SystemClock;
 import android.util.Log;
 
@@ -37,9 +40,11 @@ public class PollService extends IntentService {
                 context.getSystemService(Context.ALARM_SERVICE);
 
         if (isOn) {
+            Log.i(TAG, "setServiceAlarm: on");
             alarmManager.setRepeating(AlarmManager.ELAPSED_REALTIME,
                     SystemClock.elapsedRealtime(), POLL_INTERVAL_MS, pi);
         } else {
+            Log.i(TAG, "setServiceAlarm: off");
             alarmManager.cancel(pi);
             pi.cancel();
         }
@@ -58,6 +63,7 @@ public class PollService extends IntentService {
 
     @Override
     protected void onHandleIntent(@Nullable Intent intent) {
+        createNotificationChannel();
         if (!isNetworkAvailableAndConnected()){
             return;
         }
@@ -86,13 +92,14 @@ public class PollService extends IntentService {
             Intent i = PhotoGalleryActivity.newIntent(this);
             PendingIntent pi = PendingIntent.getActivity(this, 0,i,0);
 
-            Notification notification = new Notification.Builder(this)
+            Notification notification = new NotificationCompat.Builder(this, "0")
                     .setTicker(resources.getString(R.string.new_pictures_title))
                     .setSmallIcon(android.R.drawable.ic_menu_report_image)
                     .setContentTitle(resources.getString(R.string.new_pictures_title))
                     .setContentText(resources.getString(R.string.new_pictures_text))
                     .setContentIntent(pi)
                     .setAutoCancel(true)
+                    .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                     .build();
 
             NotificationManagerCompat notificationManagerCompat =
@@ -101,6 +108,22 @@ public class PollService extends IntentService {
         }
 
         QueryPreferences.setLastResultId(this, resultId);
+    }
+
+    private void createNotificationChannel() {
+        // Create the NotificationChannel, but only on API 26+ because
+        // the NotificationChannel class is new and not in the support library
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            CharSequence name = "name";
+            String description = "description";
+            int importance = NotificationManager.IMPORTANCE_DEFAULT;
+            NotificationChannel channel = new NotificationChannel("0", name, importance);
+            channel.setDescription(description);
+            // Register the channel with the system; you can't change the importance
+            // or other notification behaviors after this
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(channel);
+        }
     }
 
     private boolean isNetworkAvailableAndConnected() {

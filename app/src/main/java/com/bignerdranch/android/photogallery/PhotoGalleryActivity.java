@@ -9,7 +9,7 @@ import androidx.fragment.app.Fragment;
 public class PhotoGalleryActivity extends SingleFragmentActivity {
 
     public static Intent newIntent(Context context){
-        return new Intent(context, PhotoGalleryFragment.class);
+        return new Intent(context, PhotoGalleryActivity.class);
     }
 
     @Override

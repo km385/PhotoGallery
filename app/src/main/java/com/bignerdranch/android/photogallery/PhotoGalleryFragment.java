@@ -2,8 +2,11 @@ package com.bignerdranch.android.photogallery;
 
 import static android.view.View.GONE;
 
+import android.app.Notification;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Resources;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
@@ -23,6 +26,7 @@ import android.widget.ImageView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.SearchView;
+import androidx.core.app.NotificationManagerCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -105,7 +109,7 @@ public class PhotoGalleryFragment extends Fragment {
             searchView.setQuery(query, false);
         });
 
-        MenuItem toggleItem = menu.findItem(R.id.menu_item_search);
+        MenuItem toggleItem = menu.findItem(R.id.menu_item_toggle_polling);
         if (PollService.isServiceAlarmOn(getActivity())){
             toggleItem.setTitle(R.string.stop_polling);
         } else {
@@ -133,9 +137,11 @@ public class PhotoGalleryFragment extends Fragment {
                 updateItems(String.valueOf(mCurrentPage));
                 return true;
             case R.id.menu_item_toggle_polling:
+
                 boolean shouldStartAlarm = !PollService.isServiceAlarmOn(getActivity());
                 PollService.setServiceAlarm(getActivity(), shouldStartAlarm);
                 getActivity().invalidateOptionsMenu();
+
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
