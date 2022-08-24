@@ -4,12 +4,16 @@ import static android.view.View.GONE;
 
 import android.app.Notification;
 import android.app.PendingIntent;
+import android.app.job.JobInfo;
+import android.app.job.JobScheduler;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
@@ -110,11 +114,21 @@ public class PhotoGalleryFragment extends Fragment {
         });
 
         MenuItem toggleItem = menu.findItem(R.id.menu_item_toggle_polling);
-        if (PollService.isServiceAlarmOn(getActivity())){
-            toggleItem.setTitle(R.string.stop_polling);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP){
+            if (PollJobService.isServiceScheduled(getActivity(), 1)){
+                toggleItem.setTitle(R.string.stop_polling);
+            } else {
+                toggleItem.setTitle(R.string.start_polling);
+            }
+
         } else {
-            toggleItem.setTitle(R.string.start_polling);
+            if (PollService.isServiceAlarmOn(getActivity())){
+                toggleItem.setTitle(R.string.stop_polling);
+            } else {
+                toggleItem.setTitle(R.string.start_polling);
+            }
         }
+
     }
 
     private void setLoadingScreen(boolean set) {
@@ -137,10 +151,31 @@ public class PhotoGalleryFragment extends Fragment {
                 updateItems(String.valueOf(mCurrentPage));
                 return true;
             case R.id.menu_item_toggle_polling:
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP){
+                    final int JOB_ID = 1;
 
-                boolean shouldStartAlarm = !PollService.isServiceAlarmOn(getActivity());
-                PollService.setServiceAlarm(getActivity(), shouldStartAlarm);
+                    JobScheduler jobScheduler = (JobScheduler)
+                            getActivity().getSystemService(Context.JOB_SCHEDULER_SERVICE);
+
+                    if(!PollJobService.isServiceScheduled(getActivity(), JOB_ID)){
+                        JobInfo jobInfo = new JobInfo.Builder(
+                                JOB_ID, new ComponentName(getActivity(), PollJobService.class))
+                                .setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED)
+                                .setPeriodic(1000*15*60)
+                                .setPersisted(true)
+                                .build();
+                        jobScheduler.schedule(jobInfo);
+                        Log.i(TAG, "onOptionsItemSelected: scheduled");
+                    }else{
+                        Log.i(TAG, "onOptionsItemSelected: already scheduled");
+                    }
+
+                } else {
+                    boolean shouldStartAlarm = !PollService.isServiceAlarmOn(getActivity());
+                    PollService.setServiceAlarm(getActivity(), shouldStartAlarm);
+                }
                 getActivity().invalidateOptionsMenu();
+
 
                 return true;
             default:
