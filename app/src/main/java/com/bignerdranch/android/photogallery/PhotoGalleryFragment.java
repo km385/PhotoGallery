@@ -114,20 +114,20 @@ public class PhotoGalleryFragment extends Fragment {
         });
 
         MenuItem toggleItem = menu.findItem(R.id.menu_item_toggle_polling);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP){
-            if (PollJobService.isServiceScheduled(getActivity(), 1)){
-                toggleItem.setTitle(R.string.stop_polling);
-            } else {
-                toggleItem.setTitle(R.string.start_polling);
-            }
-
-        } else {
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP){
+//            if (PollJobService.isServiceScheduled(getActivity(), 1)){
+//                toggleItem.setTitle(R.string.stop_polling);
+//            } else {
+//                toggleItem.setTitle(R.string.start_polling);
+//            }
+//
+//        } else {
             if (PollService.isServiceAlarmOn(getActivity())){
                 toggleItem.setTitle(R.string.stop_polling);
             } else {
                 toggleItem.setTitle(R.string.start_polling);
             }
-        }
+//        }
 
     }
 
@@ -151,29 +151,22 @@ public class PhotoGalleryFragment extends Fragment {
                 updateItems(String.valueOf(mCurrentPage));
                 return true;
             case R.id.menu_item_toggle_polling:
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP){
-                    final int JOB_ID = 1;
-
-                    JobScheduler jobScheduler = (JobScheduler)
-                            getActivity().getSystemService(Context.JOB_SCHEDULER_SERVICE);
-
-                    if(!PollJobService.isServiceScheduled(getActivity(), JOB_ID)){
-                        JobInfo jobInfo = new JobInfo.Builder(
-                                JOB_ID, new ComponentName(getActivity(), PollJobService.class))
-                                .setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED)
-                                .setPeriodic(1000*15*60)
-                                .setPersisted(true)
-                                .build();
-                        jobScheduler.schedule(jobInfo);
-                        Log.i(TAG, "onOptionsItemSelected: scheduled");
-                    }else{
-                        Log.i(TAG, "onOptionsItemSelected: already scheduled");
-                    }
-
-                } else {
+//                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP){
+//                    final int JOB_ID = 1;
+//
+//                    if(!PollJobService.isServiceScheduled(getActivity(), JOB_ID)){
+//                        PollJobService.setUpService(getActivity(), JOB_ID);
+//                        Log.i(TAG, "onOptionsItemSelected: scheduled");
+//                    }else{
+//                        PollJobService.cancelJob(getActivity(), JOB_ID);
+//
+//                        Log.i(TAG, "onOptionsItemSelected: already scheduled");
+//                    }
+//
+//                } else {
                     boolean shouldStartAlarm = !PollService.isServiceAlarmOn(getActivity());
                     PollService.setServiceAlarm(getActivity(), shouldStartAlarm);
-                }
+//                }
                 getActivity().invalidateOptionsMenu();
 
 

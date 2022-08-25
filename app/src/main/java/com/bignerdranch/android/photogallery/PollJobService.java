@@ -6,6 +6,7 @@ import android.app.job.JobInfo;
 import android.app.job.JobParameters;
 import android.app.job.JobScheduler;
 import android.app.job.JobService;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
@@ -59,6 +60,32 @@ public class PollJobService extends JobService {
         }
         return hasBeenScheduled;
     }
+
+    public static void setUpService(Context context, int JOB_ID){
+        JobScheduler jobScheduler = (JobScheduler)
+                context.getSystemService(Context.JOB_SCHEDULER_SERVICE);
+
+        JobInfo jobInfo = new JobInfo.Builder(
+                JOB_ID, new ComponentName(context, PollJobService.class))
+                .setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED)
+                .setPeriodic(1000*15*60)
+                .setPersisted(true)
+                .build();
+        jobScheduler.schedule(jobInfo);
+
+        QueryPreferences.setAlarmOn(context, true);
+    }
+
+    public static void cancelJob(Context context, int JOB_ID){
+        JobScheduler jobScheduler = (JobScheduler)
+                context.getSystemService(Context.JOB_SCHEDULER_SERVICE);
+        jobScheduler.cancel(JOB_ID);
+
+        QueryPreferences.setAlarmOn(context, false);
+        Log.i(TAG, "Service has been canceled: " + JOB_ID);
+    }
+
+
 
     private void handleJob(){
         String query = QueryPreferences.getStoredQuery(this);
