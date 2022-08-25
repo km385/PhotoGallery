@@ -16,17 +16,17 @@ public class StartupReceiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         Log.i(TAG, "Received broadcast intent: " + intent.getAction());
 
-//       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP){
-//           if(QueryPreferences.isAlarmOn(context)){
-//               PollJobService.setUpService(context, 1);
-//           } else {
-//               PollJobService.cancelJob(context, 1);
-//           }
-//
-//       } else {
+       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP){
+           if(QueryPreferences.isAlarmOn(context)){
+               PollJobService.setUpService(context, 1);
+           } else {
+               PollJobService.cancelJob(context, 1);
+           }
+
+       } else {
            boolean isOn = QueryPreferences.isAlarmOn(context);
            PollService.setServiceAlarm(context, isOn);
-//       }
+       }
 
     }
 }
