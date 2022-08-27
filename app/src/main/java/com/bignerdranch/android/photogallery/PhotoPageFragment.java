@@ -1,6 +1,7 @@
 package com.bignerdranch.android.photogallery;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
@@ -12,6 +13,7 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.ProgressBar;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -30,6 +32,22 @@ public class PhotoPageFragment extends VisibleFragment{
         PhotoPageFragment fragment = new PhotoPageFragment();
         fragment.setArguments(args);
         return fragment;
+    }
+
+    @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+        OnBackPressedCallback callback = new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                if (mWebView.canGoBack()){
+                    mWebView.goBack();
+                } else {
+                    requireActivity().finish();
+                }
+            }
+        };
+        requireActivity().getOnBackPressedDispatcher().addCallback(this, callback);
     }
 
     @Override
@@ -68,6 +86,9 @@ public class PhotoPageFragment extends VisibleFragment{
         mWebView.setWebViewClient(new WebViewClient());
         mWebView.loadUrl(mUri.toString());
 
+
         return v;
     }
+
+
 }
