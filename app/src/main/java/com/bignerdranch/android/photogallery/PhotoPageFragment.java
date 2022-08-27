@@ -2,13 +2,19 @@ package com.bignerdranch.android.photogallery;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.URLUtil;
 import android.webkit.WebChromeClient;
+import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.ProgressBar;
@@ -16,9 +22,11 @@ import android.widget.ProgressBar;
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
 public class PhotoPageFragment extends VisibleFragment{
+    private static final String TAG = "PhotoPageFragment";
     private static final String ARG_URI = "photo_page_url";
 
     private Uri mUri;
@@ -60,7 +68,8 @@ public class PhotoPageFragment extends VisibleFragment{
     @SuppressLint("SetJavaScriptEnabled")
     @Nullable
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater,
+                             @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_photo_page, container, false);
 
         mProgressBar = v.findViewById(R.id.page_progress_bar);
@@ -83,12 +92,26 @@ public class PhotoPageFragment extends VisibleFragment{
                 activity.getSupportActionBar().setSubtitle(title);
             }
         });
-        mWebView.setWebViewClient(new WebViewClient());
+        mWebView.setWebViewClient(new WebViewClient(){
+
+            @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+                Uri uri = request.getUrl();
+                Log.i(TAG, "shouldOverrideUrlLoading: " + uri.toString());
+                if(URLUtil.isNetworkUrl(uri.toString())){
+                    return false;
+                } else {
+                    Intent i = new Intent(Intent.ACTION_VIEW, request.getUrl());
+                    startActivity(i);
+                    return true;
+                }
+            }
+        });
         mWebView.loadUrl(mUri.toString());
 
 
         return v;
     }
-
 
 }
